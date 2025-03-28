@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0 # Needed for commit hash
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
@@ -25,10 +27,8 @@ jobs:
       - name: Test with pytest
         run: poetry run pytest
       - name: Build Docker image
-        if: github.event_name == 'push'
-        run: docker build -t universal-recommender .
+        run: docker build -t universal-recommender:latest .
       - name: Push Docker image to Docker Hub
-        if: github.event_name == 'push'
         uses: docker/build-push-action@v1
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -36,3 +36,19 @@ jobs:
           repository: https://github.com/Marsupilami-it/UniRec
           tags: latest
           push: true
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH and Deploy to Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            docker stop universal-recommender || true
+            docker rm universal-recommender || true
+            docker pull https://github.com/Marsupilami-it/UniRec:latest
+            docker run -d -p 8000:8000 --name

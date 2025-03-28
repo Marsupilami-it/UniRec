@@ -8,9 +8,11 @@ authors = [
 packages = [
     { include = "analysis" },
     { include = "api_adapters" },
+    { include = "data" },
     { include = "data_processing" },
     { include = "ml_pipeline" },
     { include = "security" },
+    { include = "src" },
 ]
 readme = "Readme.md"
 requires-python = ">=3.11"

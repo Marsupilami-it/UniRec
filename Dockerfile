@@ -1,10 +1,17 @@
-FROM ubuntu:latest
-LABEL authors="ITon"
+FROM python:3.11-slim-buster
 
-ENTRYPOINT ["top", "-b"]
-
-FROM python:3.11
 WORKDIR /app
+
+COPY poetry.lock pyproject.toml ./
+
+RUN pip install --no-cache-dir poetry
+
+ENV POETRY_HOME=/opt/poetry
+ENV POETRY_VIRTUALENVS_CREATE=false
+ENV PATH="$POETRY_HOME/bin:$PATH"
+
+RUN poetry install --no-dev --no-interaction --no-ansi
+
 COPY . .
-RUN poetry install --no-dev
-CMD ["python", "setup.py"]
+
+CMD ["python", "src"]
