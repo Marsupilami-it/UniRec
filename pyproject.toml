@@ -6,7 +6,11 @@ authors = [
     {name = "ITon",email = "larina.nina@wb.ru"}
 ]
 packages = [
-  { include = "src" },
+    { include = "analysis" },
+    { include = "api_adapters" },
+    { include = "data_processing" },
+    { include = "ml_pipeline" },
+    { include = "security" },
 ]
 readme = "Readme.md"
 requires-python = ">=3.11"
