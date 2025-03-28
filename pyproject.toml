@@ -1,0 +1,26 @@
+[project]
+name = "unirec"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "ITon",email = "larina.nina@wb.ru"}
+]
+packages = [
+    { include = "analysis" },
+    { include = "api_adapters" },
+    { include = "data_processing" },
+    { include = "ml_pipeline" },
+    { include = "security" },
+]
+readme = "Readme.md"
+requires-python = ">=3.11"
+dependencies = [
+]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.dev-dependencies]
+pytest = "^8.3.5"
+ruff = "^0.11.2"
