@@ -42,7 +42,7 @@
                     </div>
                     <br>
 
-                    <button class="button button-outline" @click="is_openned_actions = !is_openned_actions">{{ is_openned_actions ? 'Скрыть действия' : 'Действия'  }}</button>
+                    <button class="button button-outline" @click="is_openned_actions = !is_openned_actions">{{ is_openned_actions ? 'Скрыть' : 'Я хочу'  }}</button>
                     <div v-if="is_openned_actions" style="padding-left: 15pt;">
                         <label v-for="action in actions">
                             <input type="checkbox">
@@ -53,9 +53,18 @@
 
                     <br>
                     <br>
-                    <button class="button">Запустить</button>
+                    <button class="button" @click="start_process">Запустить</button>
                 </fieldset>
             </form>
+
+            <div>
+                <div v-for="card in cards" style="display: inline-block; border-radius: 3px; border: 1px solid grey; margin: 5pt; padding: 2pt;">
+                    <h3>{{ card.title }}</h3>
+                    <p style="text-align: right;">{{ card.short_description }}</p>
+                    <p>{{ card.description }}</p>
+                    <p>Участников: {{ card.count_members }}</p>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -64,14 +73,20 @@
 
   createApp({
     //template: `
-//`,
+    //`,
     setup() {
       const promt = ref('')
       const is_opposite = ref(false)
       const is_openned_details = ref(false)
       const is_openned_actions = ref(false)
       const details = ref([])
-      const actions = ref(['Дать рекомендации', 'Открыть филиал', 'Сравнить с конкурентами']);
+      const actions = ref([
+        'узнать плюсы и минусы моей страницы, план по развитию',
+        'узнать конкурентов, сравнить их',
+        'узнать характеристики подписчика, для кого готовить контент и рекламу',
+        'комплекс (анализ, конкуренты, пользователь, план развития)',
+      ]);
+      cards = ref([])
       return {
         is_opposite,
         promt,
@@ -79,8 +94,17 @@
         is_openned_details,
         is_openned_actions,
         actions,
+        cards,
       }
-    }
+    },
+    methods: {
+        start_process() {
+            this.is_openned_details = false
+            this.is_openned_actions = false
+            this.cards.push({title: 'Their title', description: 'Their description', short_description: 'Their description', count_members: 10})
+            this.cards.push({title: 'Their title 2', description: 'Their description 2', short_description: 'Their description', count_members: 10})
+        }
+    },
   }).mount('#app')
     </script>
 </body>
