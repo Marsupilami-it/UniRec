@@ -1,0 +1,55 @@
+version: "3.8"
+
+services:
+
+  kafka:
+    build:
+      context: ./infrastructure/kafka
+      dockerfile: Dockerfile
+    container_name: kafka
+    ports:
+      - "9093:9093"
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: "1"
+      KAFKA_LISTENERS: "INSIDE://:9093,OUTSIDE://0.0.0.0:9092"
+      KAFKA_ADVERTISED_LISTENERS: "OUTSIDE://localhost:9092"
+    volumes:
+      - kafka_data:/data/kafka
+
+  zookeeper:
+    build:
+      context: ./infrastructure/zookeeper
+      dockerfile: Dockerfile
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    volumes:
+      - zookeeper_data:/data/zookeeper
+
+  airflow:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - kafka
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@db:5432/airflow
+      PGPASSWORD: airflow
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  kafka_data:
+  zookeeper_data:
+  postgres_data:

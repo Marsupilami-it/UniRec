@@ -1,4 +1,8 @@
-FROM ubuntu:latest
-LABEL authors="replica"
+FROM apache/airflow:2.7.3
 
-ENTRYPOINT ["top", "-b"]
+COPY poetry.lock pyproject.toml/tmp
+RUN pip install poetry && poetry install --no-interaction --no-ansi
+
+COPY orchestration/airflow_dags /opt/airflow/dags
+
+USER airflowop", "-b"
