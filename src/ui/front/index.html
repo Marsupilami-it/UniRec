@@ -1,0 +1,145 @@
+<html>
+<head>
+    <title>UnicRec | Мультирекомендательная смарт-платформа</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <!-- Google Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic">
+
+    <!-- CSS Reset -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css">
+
+    <!-- Milligram CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.4.1/milligram.css">
+</head>
+
+
+<body>
+    <div class="container">
+        <h1 style="text-align: center;">Мультирекомендательная <br> Смарт-платформа</h1>
+        <div id="app">
+            <form @submit.prevent>
+                <fieldset>
+                    <label for="nameField">Ссылка</label>
+                    <input type="text" placeholder="сайт, профиль и т. д." id="nameField" v-model="link" required>
+                    <label>
+                        <input type="checkbox" v-model="is_opposite"> Это конкурент
+                    </label>
+
+                    <button class="button button-outline" @click="is_openned_details = !is_openned_details">{{ is_openned_details ? 'Скрыть уточнения' : 'Уточнить'  }}</button>
+                    <div v-if="is_openned_details" style="padding-left: 15pt;">
+                        <div class="row" style="margin-left: 0;">
+                            <input type="text" placeholder="ссылка">
+                            <select name="" style="width: 30%;">
+                                <option value="vk">ВКонтакте</option>
+                                <option value="tg">Телеграм</option>
+                                <option value="youtube">Youtube</option>
+                                <option value="rutube">Rutube</option>
+                            </select>
+                        </div>
+                        <button class="button button-outline">Добавить</button>
+                    </div>
+                    <br>
+
+                    <select name="promptField" v-model="prompt">
+                        <option value="0" disabled selected>Я хочу</option>
+                        <option v-for="action in actions" :value="action.id" :disabled="!action.is_active">{{ action.title }}</option>
+                        <option value="-1" disabled>Свой вариант</option>
+                    </select>
+                    <input v-if="prompt == -1" type="text" v-model="prompt_text">
+
+                    <br>
+                    <br>
+                    <button class="button" @click="start_process">Запустить</button>
+                    <div>{{ message_status }}</div>
+                </fieldset>
+            </form>
+
+            <div>
+                <div v-for="card in cards" style="display: inline-block; border-radius: 3px; border: 1px solid grey; margin: 5pt; padding: 2pt;">
+                    <h3>{{ card.title }}</h3>
+                    <span style="padding: 3px; background-color: green;">{{ card.is_mine ? 'Моя' : 'Конкурент'}}</span>
+                    <p style="text-align: right;">{{ card.short_description }}</p>
+                    <p>{{ card.description }}</p>
+                    <p>Участников: {{ card.count_members }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const { createApp, ref } = Vue
+
+    createApp({
+        //template: `
+        //`,
+        setup() {
+            const link = ref('')
+            const message_status = ref('')
+            const prompt_text = ref('')
+            const prompt = ref(0)
+            const is_opposite = ref(false)
+            const is_openned_details = ref(false)
+            const details = ref([])
+            const actions = ref([
+                {id: 1, title: 'узнать плюсы и минусы моей страницы, план по развитию', is_active: false},
+                {id: 2, title: 'узнать конкурентов, сравнить их', is_active: true},
+                {id: 3, title: 'узнать характеристики подписчика, для кого готовить контент и рекламу', is_active: false},
+                {id: 4, title: 'комплекс (анализ, конкуренты, пользователь, план развития)', is_active: false},
+            ]);
+            cards = ref([])
+            return {
+                is_opposite,
+                prompt,
+                prompt_text,
+                details,
+                is_openned_details,
+                actions,
+                cards,
+                message_status,
+                link,
+            }
+        },
+        methods: {
+            start_process() {
+                if (!this.link) return;
+
+                let self = this;
+                URL_WS = 'ws://localhost:8011'
+                let socket = new WebSocket(`${URL_WS}/ws/start_process/`);
+                socket.onmessage = function(event) {
+                    let data = JSON.parse(event.data);
+                    card = data['card']
+                    if (card) {
+                        self.cards.push(card);
+                    }
+                }
+                socket.onopen = function(event) { 
+                    console.log('Соединились с сервером')
+                }
+                socket.onclose = function(event) { 
+                    self.message_status.value = 'Завершено'
+                }
+                socket.onerror = function(event) { 
+                    console.log('error', event)
+                    self.message_status.value = 'Ошибка соединения с сервером'
+                }
+                socket.on = function(event) { 
+                    console.log('on', event)
+                }
+
+                this.message_status = 'Обрабатываем...'
+                this.cards.length = 0;
+                let data_str = JSON.stringify({'link': this.link})
+                if (socket.readyState == 1) {
+                    socket.send(data_str)
+                } else {
+                    socket.addEventListener('open', () => {socket.send(data_str)})
+                }
+
+                this.is_openned_details = false
+            }
+        },
+    }).mount('#app')
+    </script>
+</body>
