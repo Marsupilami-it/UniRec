@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  kafka:
+    image: confluentinc/cp-kafka
+    container_name: kafka
+    ports:
+      - "9093:9093"  # Порт для Kafka клиентов (producer и consumer)
+      - "9092:9092" # Порт для внешних клиентов, если нужно
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_LISTENERS: INSIDE://:9093,OUTSIDE://72.14.201.24:9092
+      KAFKA_ADVERTISED_LISTENERS: OUTSIDE://72.14.201.24:9092
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_INTER_BROKER_LISTENER_NAME: OUTSIDE
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      PLAINTEXT_INSIDE: INSIDE://:9093
+      PLAINTEXT_OUTSIDE: OUTSIDE://72.14.201.24:9092
+
+    depends_on:
+      - zookeeper
+    volumes:
+      - kafka_data:/data/kafka
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper_data:/data/zookeeper # Сохранение данных Zookeeper
+
+volumes:
+  kafka_data:
+  zookeeper_data:
