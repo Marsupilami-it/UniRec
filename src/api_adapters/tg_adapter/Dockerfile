@@ -5,6 +5,6 @@ ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 VOLUME /app
 
-COPY src.py requirements.txt ./
+COPY src.py requirements.txt .env ./
 
 RUN apt-get update && python3 -m pip install --no-cache-dir --no-warn-script-location --user -r requirements.txt
