@@ -1,0 +1,86 @@
+<html>
+<head>
+    <title>UnicRec | Мультирекомендательная смарт-платформа</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <!-- Google Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic">
+
+    <!-- CSS Reset -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css">
+
+    <!-- Milligram CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.4.1/milligram.css">
+</head>
+
+
+<body>
+    <div class="container">
+        <h1 style="text-align: center;">Мультирекомендательная <br> Смарт-платформа</h1>
+        <div id="app">
+            <form @submit.prevent>
+                <fieldset>
+                    <label for="nameField">Ссылка</label>
+                    <input type="text" placeholder="сайт, профиль и т. д." id="nameField">
+                    <label>
+                        <input type="checkbox" v-model="is_opposite"> Это конкурент
+                    </label>
+                    <br>
+
+                    <button class="button button-outline" @click="is_openned_details = !is_openned_details">{{ is_openned_details ? 'Скрыть уточнения' : 'Уточнить'  }}</button>
+                    <div v-if="is_openned_details" style="padding-left: 15pt;">
+                        <div class="row" style="margin-left: 0;">
+                            <input type="text" placeholder="ссылка">
+                            <select name="" style="width: 30%;">
+                                <option value="vk">ВКонтакте</option>
+                                <option value="tg">Телеграм</option>
+                                <option value="youtube">Youtube</option>
+                                <option value="rutube">Rutube</option>
+                            </select>
+                        </div>
+                        <button class="button button-outline">Добавить</button>
+                    </div>
+                    <br>
+
+                    <button class="button button-outline" @click="is_openned_actions = !is_openned_actions">{{ is_openned_actions ? 'Скрыть действия' : 'Действия'  }}</button>
+                    <div v-if="is_openned_actions" style="padding-left: 15pt;">
+                        <label v-for="action in actions">
+                            <input type="checkbox">
+                            {{ action }} <!--<button class="button button-outline">{{ action }}</button>-->
+                        </label>
+                        <input type="text" v-model="promt" name="promtField" placeholder="Свой вариант">
+                    </div>
+
+                    <br>
+                    <br>
+                    <button class="button">Запустить</button>
+                </fieldset>
+            </form>
+        </div>
+    </div>
+
+    <script>
+  const { createApp, ref } = Vue
+
+  createApp({
+    //template: `
+//`,
+    setup() {
+      const promt = ref('')
+      const is_opposite = ref(false)
+      const is_openned_details = ref(false)
+      const is_openned_actions = ref(false)
+      const details = ref([])
+      const actions = ref(['Дать рекомендации', 'Открыть филиал', 'Сравнить с конкурентами']);
+      return {
+        is_opposite,
+        promt,
+        details,
+        is_openned_details,
+        is_openned_actions,
+        actions,
+      }
+    }
+  }).mount('#app')
+    </script>
+</body>
