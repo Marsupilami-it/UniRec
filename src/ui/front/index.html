@@ -25,7 +25,6 @@
                     <label>
                         <input type="checkbox" v-model="is_opposite"> Это конкурент
                     </label>
-                    <br>
 
                     <button class="button button-outline" @click="is_openned_details = !is_openned_details">{{ is_openned_details ? 'Скрыть уточнения' : 'Уточнить'  }}</button>
                     <div v-if="is_openned_details" style="padding-left: 15pt;">
@@ -42,14 +41,12 @@
                     </div>
                     <br>
 
-                    <button class="button button-outline" @click="is_openned_actions = !is_openned_actions">{{ is_openned_actions ? 'Скрыть' : 'Я хочу'  }}</button>
-                    <div v-if="is_openned_actions" style="padding-left: 15pt;">
-                        <label v-for="action in actions">
-                            <input type="checkbox">
-                            {{ action }} <!--<button class="button button-outline">{{ action }}</button>-->
-                        </label>
-                        <input type="text" v-model="promt" name="promtField" placeholder="Свой вариант">
-                    </div>
+                    <select name="promptField" v-model="prompt">
+                        <option value="0" disabled selected>Я хочу</option>
+                        <option v-for="action in actions" :value="action.id" :disabled="!action.is_active">{{ action.title }}</option>
+                        <option value="-1">Свой вариант</option>
+                    </select>
+                    <input v-if="prompt == -1" type="text" v-model="prompt_text">
 
                     <br>
                     <br>
@@ -75,21 +72,23 @@
     //template: `
     //`,
     setup() {
-      const promt = ref('')
-      const is_opposite = ref(false)
+    const prompt_text = ref('')
+    const prompt = ref(0)
+    const is_opposite = ref(false)
       const is_openned_details = ref(false)
       const is_openned_actions = ref(false)
       const details = ref([])
       const actions = ref([
-        'узнать плюсы и минусы моей страницы, план по развитию',
-        'узнать конкурентов, сравнить их',
-        'узнать характеристики подписчика, для кого готовить контент и рекламу',
-        'комплекс (анализ, конкуренты, пользователь, план развития)',
+        {id: 1, title: 'узнать плюсы и минусы моей страницы, план по развитию', is_active: false},
+        {id: 2, title: 'узнать конкурентов, сравнить их', is_active: true},
+        {id: 3, title: 'узнать характеристики подписчика, для кого готовить контент и рекламу', is_active: false},
+        {id: 4, title: 'комплекс (анализ, конкуренты, пользователь, план развития)', is_active: false},
       ]);
       cards = ref([])
       return {
         is_opposite,
-        promt,
+        prompt,
+        prompt_text,
         details,
         is_openned_details,
         is_openned_actions,
