@@ -1,0 +1,12 @@
+# docker-compose.yml
+services:
+
+  api-tg-adapter:
+    build: .
+    container_name: 'api-tg-adapter_container'
+    command: >
+       bash -c "python3 src.py"
+    ports:
+      - 8013:8000
+    volumes:
+      - ./:/app
