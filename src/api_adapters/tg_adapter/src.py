@@ -1,9 +1,10 @@
 import json
 import os
 
+import pika
 import requests
 from dotenv import load_dotenv
-from kafka import KafkaConsumer
+# from kafka import KafkaConsumer
 from telethon.sync import TelegramClient
 from telethon.tl.functions.messages import GetHistoryRequest
 from qrcode import QRCode
@@ -21,6 +22,31 @@ URL = f'https://api.telegram.org/bot{TOKEN}'
 # client = TelegramClient(PHONE, API_ID, API_HASH)
 # client.start()
 
+channel = None
+
+def on_connected(connection):
+    """Called when we are fully connected to RabbitMQ"""
+    connection.channel(on_open_callback=on_channel_open)
+    print('connected', connection)
+
+def on_close(connection, exception):
+    # Invoked when the connection is closed
+    connection.ioloop.stop()
+    print('stopped', exception)
+
+# Step #3
+def on_channel_open(new_channel):
+    """Called when our channel has opened"""
+    global channel
+    channel = new_channel
+    # channel.queue_declare(queue="test", durable=True, exclusive=False, auto_delete=False, callback=on_queue_declared)
+    channel.basic_consume(queue='api-adapter-tg', auto_ack=True, on_message_callback=callback)
+    channel.queue_declare(queue='api-adapter-tg')
+    channel.queue_declare(queue='api-adapters-output')
+    print('channel openned', channel)
+
+
+connection = pika.SelectConnection(pika.ConnectionParameters('localhost'), on_open_callback=on_connected, on_close_callback=on_close)
 
 def gen_qr(token:str):
     qr.clear()
@@ -44,8 +70,8 @@ async def main(client: TelegramClient):
             await qr_login.recreate()
 
 
-client = TelegramClient('SessionName', API_ID, API_HASH)
-client.loop.run_until_complete(main(client))
+#client = TelegramClient('SessionName', API_ID, API_HASH)
+#client.loop.run_until_complete(main(client))
 
 
 def get_chat_info(channel_id):
@@ -104,18 +130,18 @@ def get_chat_info(channel_id):
         if response_json.get('ok'):
             data['count_members'] = response_json['result']
 
-    if not data.get('is_private', True):
-        history = client(GetHistoryRequest(
-            peer=channel_id,
-            offset_id=0,
-            offset_date=None,
-            add_offset=0,
-            limit=10,
-            max_id=0,
-            min_id=0,
-            hash=0
-        ))
-        data['messages'] = [message.message for message in history.messages]
+    # if not data.get('is_private', True):
+    #     history = client(GetHistoryRequest(
+    #         peer=channel_id,
+    #         offset_id=0,
+    #         offset_date=None,
+    #         add_offset=0,
+    #         limit=10,
+    #         max_id=0,
+    #         min_id=0,
+    #         hash=0
+    #     ))
+    #     data['messages'] = [message.message for message in history.messages]
 
     return data
 
@@ -129,22 +155,30 @@ def link2channel_id(link):
         return f'@{chat_name}'
 
 
-# Not for production >>>>>>>>
-#chat_id = link2channel_id('https://t.me/it_syeysk')
-chat_id = link2channel_id('https://t.me/Kuplinov_Telegram')
-#print(chat_id)
-data = get_chat_info(chat_id)
-print(data)
-with open('test.json', 'wb') as ftest:
-    json.dump(data, ftest)
-exit()
-# <<<<<<<<<
+def callback(ch, method, properties, body):
+    print(body)
+    recieved_data = json.loads(body)
+    chat_id = link2channel_id(recieved_data['link'])
+    data = get_chat_info(chat_id)
+    print(data)
+    data['connection_id'] = recieved_data['connection_id']
+    channel.basic_publish(exchange='', routing_key='api-adapters-output', body=json.dumps(data))
 
 
-consumer = KafkaConsumer(bootstrap_servers='10.2.0.244:9093')
+try:
+    # Loop so we can communicate with RabbitMQ
+    connection.ioloop.start()
+except KeyboardInterrupt:
+    # Gracefully close the connection
+    connection.close()
+    # Loop until we're fully closed.
+    # The on_close callback is required to stop the io loop
+    connection.ioloop.start()
 
-for message in consumer:
-    data = json.loads(message)
-    channel_id = link2channel_id(data['link'])
-    data = get_chat_info(channel_id)
-    print(message, data)
+# consumer = KafkaConsumer(bootstrap_servers='10.2.0.244:9093')
+
+# for message in consumer:
+#     data = json.loads(message)
+#     channel_id = link2channel_id(data['link'])
+#     data = get_chat_info(channel_id)
+#     print(message, data)
