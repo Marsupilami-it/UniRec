@@ -22,7 +22,7 @@ def callback(ch, method, properties, body):
     asyncio.run(cor)
 
 
-def callback(ch, method, properties, body):
+def callback_llm(ch, method, properties, body):
     print(ch, method, properties, body)
     data = json.loads(body)
 
@@ -54,10 +54,10 @@ def on_channel_open(new_channel):
     channel = new_channel
     # channel.queue_declare(queue="test", durable=True, exclusive=False, auto_delete=False, callback=on_queue_declared)
     channel.basic_consume(queue='api-adapters-output', auto_ack=True, on_message_callback=callback)
+    channel.basic_consume(queue='llm-output', auto_ack=True, on_message_callback=callback_llm)
     channel.queue_declare(queue='api-adapter-tg')
     channel.queue_declare(queue='api-adapter-vk')
     channel.queue_declare(queue='api-adapters-output')
-    channel.basic_consume(queue='llm-output', auto_ack=True, on_message_callback=callback_llm)
     channel.queue_declare(queue='llm-output')
     channel.queue_declare(queue='llm-input')
     print('channel openned', channel)
