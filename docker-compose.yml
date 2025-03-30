@@ -40,6 +40,15 @@ services:
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@db:5432/airflow
       PGPASSWORD: airflow
 
+  mlflow:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlruns:/app/mlruns  # mlruns для хранения результатов экспериментов.
+    environment:
+      MLFLOW_TRACKING_URI: "http://localhost:5000"
+
   db:
     image: postgres:15
     environment:
