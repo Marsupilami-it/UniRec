@@ -34,9 +34,8 @@ def on_channel_open(new_channel):
     global channel
     channel = new_channel
     # channel.queue_declare(queue="test", durable=True, exclusive=False, auto_delete=False, callback=on_queue_declared)
-    channel.basic_consume(queue='api-adapter-tg', auto_ack=True, on_message_callback=callback)
-    channel.queue_declare(queue='api-adapter-tg')
-    channel.queue_declare(queue='api-adapters-output')
+    channel.basic_consume(queue='llm-input', auto_ack=True, on_message_callback=callback)
+    channel.queue_declare(queue='llm-output')
     print('channel openned', channel)
 
 
