@@ -11,6 +11,8 @@
 
     <!-- Milligram CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.4.1/milligram.css">
+
+    <script src="https://unpkg.com/@vkid/sdk@<3.0.0/dist-sdk/umd/index.js"></script>
 </head>
 
 
@@ -18,6 +20,16 @@
     <div class="container">
         <h1 style="text-align: center;">Мультирекомендательная <br> Смарт-платформа</h1>
         <div id="app">
+            <unic-rec-component v-if="content_name == 'unic'"></unic-rec-component>
+            <registration-component v-if="content_name == 'reg'"></registration-component>
+        </div>
+    </div>
+
+    <script>
+    const { createApp, ref, provide, inject } = Vue
+
+    const UnicRecComponent = {
+        template: `
             <form @submit.prevent>
                 <fieldset>
                     <label for="nameField">Ссылка</label>
@@ -64,15 +76,7 @@
                     <p>Участников: {{ card.count_members }}</p>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <script>
-    const { createApp, ref } = Vue
-
-    createApp({
-        //template: `
-        //`,
+        `,
         setup() {
             const link = ref('')
             const message_status = ref('')
@@ -140,6 +144,68 @@
                 this.is_openned_details = false
             }
         },
-    }).mount('#app')
+    }
+
+    const RegistrationComponent = {
+        // https://id.vk.com/about/business/go/docs/ru/vkid/latest/vk-id/connection/elements/onetap-button/onetap-web
+        // https://id.vk.com/about/business/go/docs/ru/vkid/latest/vk-id/connection/elements/custom-button/custom-button-web
+        template: `
+        <div style="text-align: center;">
+            <h2>Регистрация</h2>
+            
+            <div id="VkIdSdkOneTap" style="width: 30%; display: inline-block;" @click="open_unic"></div>
+            <br><br>
+
+            <button class="button" @click="is_openned_login_form = !is_openned_login_form">Войти через логин/пароль</button>
+            <form @submit.prevent v-if="is_openned_login_form" >
+                <input type="text" placeholder="логин" required v-model="login">
+                <br>
+                <input type="password" placeholder="пароль" required v-model="password">
+                <button class="button" @click="open_unic">Войти</button>
+            </form>
+        </div>
+        `,
+        setup() {
+            const is_openned_login_form = ref(false)
+            const login = ref('')
+            const password = ref('')
+            content_name = inject('content_name')
+            return {
+                is_openned_login_form,
+                content_name,
+                login,
+                password,
+            }
+        },
+        methods: {
+            open_unic(event) {
+                if (this.login && this.password) this.content_name = 'unic'
+            }
+        },
+    }
+
+    const app = createApp({
+        setup() {
+            const content_name = ref('reg')
+            provide('content_name', content_name);
+            return {
+                content_name,
+            }
+        }
+    })
+    app.component('UnicRecComponent', UnicRecComponent)
+    app.component('RegistrationComponent', RegistrationComponent)
+    app.mount('#app')
+    </script>
+
+    <script>
+// https://id.vk.com/about/business/go/docs/ru/vkid/latest/vk-id/connection/elements/onetap-button/onetap-web
+const VKID = window.VKIDSDK;
+const oneTap = new VKID.OneTap();
+const container = document.getElementById('VkIdSdkOneTap');
+if (container) {
+  oneTap.render({ container: container, scheme: VKID.Scheme.LIGHT, lang: VKID.Languages.RUS })
+    .on(VKID.WidgetEvents.ERROR, handleError); // handleError — какой-либо обработчик ошибки.
+}
     </script>
 </body>
