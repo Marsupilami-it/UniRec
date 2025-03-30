@@ -21,6 +21,15 @@ def callback(ch, method, properties, body):
     cor = send_to_browser(ws_connection, 'card', data)
     asyncio.run(cor)
 
+
+def callback(ch, method, properties, body):
+    print(ch, method, properties, body)
+    data = json.loads(body)
+
+    ws_connection = ws_connections[data.pop('connection_id')]
+    cor = send_to_browser(ws_connection, 'card', data)
+    asyncio.run(cor)
+
 # connection = pika.BlockingConnection()
 # channel = connection.channel()
 # channel.queue_declare(queue='api-adapters-output')
@@ -48,6 +57,9 @@ def on_channel_open(new_channel):
     channel.queue_declare(queue='api-adapter-tg')
     channel.queue_declare(queue='api-adapter-vk')
     channel.queue_declare(queue='api-adapters-output')
+    channel.basic_consume(queue='llm-output', auto_ack=True, on_message_callback=callback_llm)
+    channel.queue_declare(queue='llm-output')
+    channel.queue_declare(queue='llm-input')
     print('channel openned', channel)
 
 connection = pika.SelectConnection(pika.ConnectionParameters('localhost'), on_open_callback=on_connected, on_close_callback=on_close)
@@ -102,6 +114,7 @@ async def view_start_process(websocket):
                         adapter_code = 'vk'
                     
                     send_to_broker(f'api-adapter-{adapter_code}', {'link': link, 'connection_id': websocket.id.hex})
+                    send_to_broker(f'llm-input', {'link': link, 'connection_id': websocket.id.hex})
 
                     # card = {'title': 'Ресторан "Булгария"', 'description': 'Традиционный ресторан города', 'short_description': 'Ресторан, кейтеринг, банкеты', 'count_members': 102400, 'is_mine': True}
                     # await send_to_browser(websocket, 'card', card)
