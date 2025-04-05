@@ -1,0 +1,6 @@
+fastapi[standard]==0.115.12
+requests==2.32.3
+python-dotenv==1.1.0
+telethon==1.39.0
+qrcode==8.0
+ollama==0.4.7
